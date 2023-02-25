@@ -1,7 +1,8 @@
 const express = require('express')
 const bcrypt = require('bcrypt')
+const cors = require('cors')
 const {initializeApp} = require('firebase/app')
-const {getFirestore, collection , getDoc, doc, setDoc} = require('firebase/firestore')
+const {getFirestore, collection , getDoc, doc, setDoc, getDocs} = require('firebase/firestore')
 require('dotenv/config')
 
 // Configuracion de firebase
@@ -13,7 +14,10 @@ const firebaseConfig = {
     messagingSenderId: "831589755649",
     appId: "1:831589755649:web:beea6e73c1120ac6930900"
   }; 
-
+  const corsOptions = {
+    origin: '*',
+    optionsSuccessStatus: 200
+  }
   //Inicia BD 
   const firebase= initializeApp(firebaseConfig)
   const db = getFirestore()
@@ -21,6 +25,7 @@ const firebaseConfig = {
   //Inicializar el servidor
   const app = express()
 
+  app.use(cors(corsOptions))
   app.use(express.json())
 
   //Ruta para las peticiones
@@ -55,7 +60,9 @@ const firebaseConfig = {
       getDoc(doc(users,email)).then(user =>{
         if(user.exists()){
           res.json({
-            'alert': 'El correo ya existe'
+            message: "Usuarios",
+            'alert': 'success',
+            data
           })
         }else{
           bcrypt.genSalt(10, (err, salt) =>{
@@ -63,7 +70,7 @@ const firebaseConfig = {
               req.body.password = hash
 
               //Guardar en la base de datos
-              setDoc(doc(users, email), req.body).then(() =>{
+              setDoc(doc(users, email), req.body).then(()=>{
                 res.json({
                   'alert': 'success'
                 })
@@ -83,6 +90,7 @@ const firebaseConfig = {
       data.push(doc.data())
     })
     res.json({
+      message: "Usuarios",
       'alert': 'success',
       data
     })
@@ -91,7 +99,7 @@ const firebaseConfig = {
    app.post('/login', async(req,res) =>{
     let {email, password} = req.body
 
-    if(!email.length || !pass.length){
+    if(!email.length || !password.length){
       return res.json({
         'alert': 'no se han recibido los datos correctamente'
       })
