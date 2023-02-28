@@ -2,7 +2,7 @@ const express = require('express')
 const bcrypt = require('bcrypt')
 const cors = require('cors')
 const {initializeApp} = require('firebase/app')
-const {getFirestore, collection , getDoc, doc, setDoc, getDocs} = require('firebase/firestore')
+const {getFirestore, collection , getDoc, doc, setDoc, getDocs, deleteDoc, updateDoc} = require('firebase/firestore')
 require('dotenv/config')
 
 // Configuracion de firebase
@@ -82,7 +82,7 @@ const firebaseConfig = {
     }
   })
 
-   app.get('/usuarios', async (req, res) =>{
+  app.get('/usuarios', async (req, res) =>{
     const colRef  = collection(db, 'users')
     const docsSnap = await getDocs(colRef)
     let data = []
@@ -96,7 +96,7 @@ const firebaseConfig = {
     })
    })
 
-   app.post('/login', async(req,res) =>{
+  app.post('/login', async(req,res) =>{
     let {email, password} = req.body
 
     if(!email.length || !password.length){
@@ -130,7 +130,57 @@ const firebaseConfig = {
       }
    })
   })
-    
+  
+  app.post('/delete', async (req, res) =>{
+    let { email } = req.body
+
+    deleteDoc(doc(collection(db, "users"), email))
+    .then((response)=>{
+      res.json({
+        'alert': 'success'
+      })
+    })
+    .catch((error) =>{
+      res.json({
+        'alert': error
+      })
+    })
+  })
+
+  app.post('/update', async (req, res) =>{
+    const{ name, lastname, number, email} = req.body
+
+    //Validaciones de los datos
+    if(name.length <= 3){
+      res.json({'alert': 'Nombre requiere minimo 3 caracters'})
+    }else if (lastname.length <3){
+      res.json({'alert': 'Apellido requiere minimo 3 caracteres'})
+    }else if (!Number(number) || number.length <=10){
+      res.json({'alert': 'Introduce un numero de telefono correcto'})
+    } else {
+
+      db.collection('users').doc(email)
+
+      const updateData = {
+        name, 
+        lastname,
+        number
+      }
+
+      updateDoc(doc(db, 'users'), updateData, email)
+      .then((response)=>{
+        res.json({
+          'alert': 'success'
+        })
+      })
+      .catch((error) =>{
+        res.json({
+          'alert': error
+        })
+      })
+    }
+  })
+  
    
   const PORT = process.env.PORT||19000
 
