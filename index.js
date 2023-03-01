@@ -149,17 +149,17 @@ const firebaseConfig = {
 
   app.post('/update', async (req, res) =>{
     const{ name, lastname, number, email} = req.body
-
+    
     //Validaciones de los datos
     if(name.length <= 3){
       res.json({'alert': 'Nombre requiere minimo 3 caracters'})
     }else if (lastname.length <3){
       res.json({'alert': 'Apellido requiere minimo 3 caracteres'})
-    }else if (!Number(number) || number.length <=10){
+    }else if (!Number(number) || number.length <10){
       res.json({'alert': 'Introduce un numero de telefono correcto'})
     } else {
 
-      db.collection('users').doc(email)
+      const usersUpdate = collection(db, 'users')
 
       const updateData = {
         name, 
@@ -167,10 +167,12 @@ const firebaseConfig = {
         number
       }
 
-      updateDoc(doc(db, 'users'), updateData, email)
+      updateDoc(doc(usersUpdate, email), updateData, email)
       .then((response)=>{
         res.json({
-          'alert': 'success'
+          message: 'Usuarios',
+          'alert': 'success',
+          
         })
       })
       .catch((error) =>{
